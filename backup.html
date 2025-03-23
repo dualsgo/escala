@@ -19,8 +19,6 @@
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        max-width: 100%;
-        overflow-x: hidden;
       }
       .table-fixed {
         width: 400px; /* Largura fixa para as colunas Nome, Função e Horário */
@@ -65,17 +63,10 @@
       .domingo {
         background-color: #ffcccc; /* Cor de destaque para domingos */
       }
-      .trabalhado {
-        background-color: #ccffcc; /* Verde para dias trabalhados */
-      }
-      .folga {
-        background-color: #ffcccc; /* Vermelho para folgas */
-      }
       .top-buttons {
         display: flex;
         justify-content: flex-end;
         margin-bottom: 20px;
-        gap: 10px;
       }
       .copy-button {
         margin-top: 10px;
@@ -85,69 +76,6 @@
         display: flex;
         gap: 10px;
       }
-      #feedback-inconsistencia {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: 6px;
-        background-color: #fff3cd;
-        color: #856404;
-      }
-
-      /* Responsividade para dispositivos móveis */
-      @media (max-width: 768px) {
-        .container {
-          padding: 10px;
-        }
-        .table-fixed {
-          width: 100%;
-          float: none;
-        }
-        .table-scroll {
-          margin-left: 0;
-          margin-top: 20px;
-          overflow-x: auto;
-          width: 100%;
-        }
-        .top-buttons {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .button-container {
-          flex-direction: column;
-        }
-        .btn {
-          padding: 12px;
-          font-size: 1rem;
-        }
-        th, td {
-          padding: 8px;
-          font-size: 0.9rem;
-        }
-      }
-
-      @media (max-width: 576px) {
-        body {
-          padding: 10px;
-        }
-        .container {
-          padding: 8px;
-        }
-        th, td {
-          padding: 6px;
-          font-size: 0.8rem;
-          min-width: 60px;
-        }
-        .btn {
-          width: 100%;
-          margin-bottom: 8px;
-        }
-        #resultado {
-          font-size: 0.9rem;
-        }
-        .add-remove-buttons {
-          justify-content: center;
-        }
-      }
     </style>
   </head>
   <body>
@@ -155,9 +83,6 @@
       <div class="top-buttons">
         <button id="btn-salvar" class="btn btn-primary" onclick="salvarEscala()">
           Salvar Escala
-        </button>
-        <button id="btn-atualizar" class="btn btn-secondary" onclick="atualizarTabela()">
-          Atualizar
         </button>
       </div>
       <h2 id="titulo-mes">Escala Mensal de Trabalho</h2>
@@ -198,7 +123,6 @@
       <button id="btn-copiar" class="btn btn-secondary copy-button" onclick="copiarTexto()">
         Copiar Texto
       </button>
-      <div id="feedback-inconsistencia"></div>
     </div>
 
     <script>
@@ -343,12 +267,6 @@
 
         // Carregar estado salvo
         carregarEscala();
-
-        // Atualizar cores da tabela
-        atualizarCoresTabela();
-
-        // Verificar inconsistências ao carregar
-        verificarInconsistencias();
       }
 
       function adicionarLinha() {
@@ -376,10 +294,6 @@
           .map(() => `<td><select>${status.map((s) => `<option value="${s}">${s}</option>`).join("")}</select></td>`)
           .join("")}</tr>`;
         corpoTabela.insertAdjacentHTML("beforeend", novaLinhaTabela);
-
-        // Atualizar cores da tabela e verificar inconsistências
-        atualizarCoresTabela();
-        verificarInconsistencias();
       }
 
       function removerLinha() {
@@ -392,10 +306,6 @@
           colaboradoresTbody.removeChild(colaboradoresTbody.lastElementChild);
           corpoTabela.removeChild(corpoTabela.lastElementChild);
         }
-
-        // Atualizar cores da tabela e verificar inconsistências
-        atualizarCoresTabela();
-        verificarInconsistencias();
       }
 
       function salvarEscala() {
@@ -425,9 +335,6 @@
         setTimeout(() => {
           btnSalvar.innerText = "Salvar Escala";
         }, 3000);
-
-        // Verificar inconsistências após salvar
-        verificarInconsistencias();
       }
 
       function carregarEscala() {
@@ -460,83 +367,6 @@
             }
           });
         }
-
-        // Atualizar cores da tabela e verificar inconsistências
-        atualizarCoresTabela();
-        verificarInconsistencias();
-      }
-
-      function atualizarCoresTabela() {
-        const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
-        linhasTabela.forEach((tr) => {
-          tr.querySelectorAll("td select").forEach((select) => {
-            const status = select.value;
-            select.parentElement.classList.remove("trabalhado", "folga");
-            if (status === "T") {
-              select.parentElement.classList.add("trabalhado");
-            } else if (["F", "FF", "DO"].includes(status)) {
-              select.parentElement.classList.add("folga");
-            }
-          });
-        });
-      }
-
-      function verificarInconsistencias() {
-        const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
-        const feedbackInconsistencia = document.getElementById(
-          "feedback-inconsistencia"
-        );
-        let inconsistencias = [];
-
-        linhasTabela.forEach((tr, index) => {
-          const nome = document
-            .querySelectorAll("#colaboradores-tbody tr")
-            [index].querySelector("td:nth-child(1)").innerText;
-          const selects = tr.querySelectorAll("td select");
-
-          let diasConsecutivos = 0;
-          let diasInconsistentes = [];
-          selects.forEach((select, dia) => {
-            if (select.value === "T") {
-              diasConsecutivos++;
-              if (diasConsecutivos > 6) {
-                diasInconsistentes.push(dia + 1);
-              }
-            } else {
-              diasConsecutivos = 0;
-            }
-          });
-
-          if (diasInconsistentes.length > 0) {
-            inconsistencias.push({
-              nome,
-              dias: diasInconsistentes,
-            });
-          }
-        });
-
-        if (inconsistencias.length > 0) {
-          const mensagem = inconsistencias
-            .map(
-              (item) =>
-                `${item.nome} tem mais de 6 dias consecutivos trabalhados nos dias ${item.dias.join(", ")}`
-            )
-            .join("<br>");
-          feedbackInconsistencia.innerHTML = `<strong>Inconsistências encontradas:</strong><br>${mensagem}`;
-        } else {
-          feedbackInconsistencia.innerHTML = "";
-        }
-      }
-
-      function atualizarTabela() {
-        const btnAtualizar = document.getElementById("btn-atualizar");
-        btnAtualizar.innerText = "Atualizado";
-        setTimeout(() => {
-          btnAtualizar.innerText = "Atualizar";
-        }, 3000);
-
-        atualizarCoresTabela();
-        verificarInconsistencias();
       }
 
       function gerarEscalaDiaSeguinte() {
@@ -663,11 +493,6 @@
       document
         .getElementById("corpo-tabela")
         .addEventListener("change", salvarEscala);
-
-      // Atualizar automaticamente ao alterar a tabela
-      document
-        .getElementById("corpo-tabela")
-        .addEventListener("change", atualizarTabela);
 
       gerarTabelaMensal();
     </script>

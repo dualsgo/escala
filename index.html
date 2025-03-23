@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Trabalho</title>
+    <style>
+        /* Import Lilita One font from Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+        
+        body {
+            font-family: 'Lilita One', cursive;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            background-color: #FFEB3B; /* Yellow background */
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #FF0000; /* Red border */
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #FF0000; /* Red heading */
+        }
+        .escala {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FF0000; /* Red border */
+            border-radius: 5px;
+            text-align: left;
+            background-color: #f5f5f5;
+            white-space: pre-line;
+        }
+        table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #FF0000;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #FF0000; /* Red table header */
+            color: white;
+        }
+        input[type="text"] {
+            font-family: 'Lilita One', cursive;
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #FF0000;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        select {
+            font-family: 'Lilita One', cursive;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #FF0000;
+        }
+        .copy-btn, .gerar-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #FF0000; /* Red buttons */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .copy-btn:active, .gerar-btn:active {
+            background-color: #CC0000; /* Darker red on active */
+        }
+        #copy-message {
+            color: #FF0000; /* Red success message */
+            margin-top: 10px;
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            th, td {
+                padding: 8px;
+            }
+            .copy-btn, .gerar-btn {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Gerar Escala de Trabalho</h2>
+        <p id="data-atual"></p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colaborador</th>
+                    <th>Função</th>
+                    <th>Horário</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-escala"></tbody>
+        </table>
+        <button class="gerar-btn" onclick="gerarEscala()">Gerar Escala</button>
+        <div class="escala" id="resultado"></div>
+        <button class="copy-btn" onclick="copiarEscala()">Copiar Escala</button>
+        <p id="copy-message">Escala copiada com sucesso. Cole no grupo, confira uma última vez e envie para a equipe.</p>
+    </div>
+
+    <script>
+        const colaboradores = ["Lidiane", "Aline", "Jheferson", "Luiza", "Luiz", "Renata", "Júlia", "Cátia", "Erika", "Caren", "Raissa", "Nathan", "João", "Ronaldo"];
+        const funcoes = {"🔴 Caixa": "🔴 Caixa", "🟢 Pacote": "🟢 Pacote", "🟡 Organização": "🟡 Organização", "🔵 Venda": "🔵 Venda"};
+        const horariosSemana = {
+            "Abertura": ["10h às 18h"],
+            "Intermediário": ["12h às 18h"],
+            "Fechamento": ["14h às 22h"],
+            "Folga": ["Folga"],
+            "Curso": ["Curso"]
+        };
+        const horariosDomingo = {
+            "Abertura": ["12h às 20h"],
+            "Intermediário": ["12h às 18h"],
+            "Fechamento": ["14h às 22h"],
+            "Folga": ["Folga"],
+            "Curso": ["Curso"]
+        };
+
+        // Função para definir os valores padrão de cada colaborador
+        const valoresPadrao = {
+            "Lidiane": { funcao: "🔴 Caixa", horario: "10h às 18h" },
+            "Aline": { funcao: "🟢 Pacote", horario: "10h às 18h" },
+            "Jheferson": { funcao: "🟡 Organização", horario: "10h às 18h" },
+            "Luiza": { funcao: "🟡 Organização", horario: "10h às 18h" },
+            "Luiz": { funcao: "🔵 Venda", horario: "10h às 18h" },
+            "Renata": { funcao: "🔵 Venda", horario: "10h às 18h" },
+            "Júlia": { funcao: "🟡 Organização", horario: "12h às 18h" },
+            "Cátia": { funcao: "🔴 Caixa", horario: "14h às 22h" },
+            "Erika": { funcao: "🟢 Pacote", horario: "14h às 22h" },
+            "Caren": { funcao: "🟡 Organização", horario: "14h às 22h" },
+            "Raissa": { funcao: "🟡 Organização", horario: "14h às 22h" },
+            "Nathan": { funcao: "🔵 Venda", horario: "14h às 22h" },
+            "João": { funcao: "🔵 Venda", horario: "14h às 22h" },
+            "Ronaldo": { funcao: "🔵 Venda", horario: "14h às 22h" }
+        };
+
+        function gerarTabela() {
+            const tabela = document.getElementById('tabela-escala');
+            const hoje = new Date();
+            const diaSeguinte = new Date(hoje); // Cria uma cópia da data atual
+            diaSeguinte.setDate(hoje.getDate() + 1); // Adiciona 1 dia
+
+            const diaSemana = diaSeguinte.getDay(); // Obtém o dia da semana do dia seguinte
+            document.getElementById('data-atual').innerText = `Escala - ${diaSeguinte.toLocaleDateString('pt-BR')}`;
+            
+            tabela.innerHTML = ""; // Limpa a tabela antes de gerar
+            colaboradores.forEach(nome => {
+                let linha = `<tr><td><input type="text" value="${nome}" class="editable"></td>`; // Célula editável
+                const funcaoPadrao = valoresPadrao[nome] ? valoresPadrao[nome].funcao : "🔴 Caixa";
+                const horarioPadrao = valoresPadrao[nome] ? valoresPadrao[nome].horario : "Folga";
+                linha += `<td><select>${Object.values(funcoes).map(f => `<option value='${f}' ${f === funcaoPadrao ? 'selected' : ''}>${f}</option>`).join('')}</select></td>`;
+                
+                // Apenas Júlia pode ter a opção "Curso"
+                const horarios = (diaSemana === 0 || diaSemana === 6) ? horariosDomingo : horariosSemana;
+                const horariosDisponiveis = nome === "Júlia" ? horarios : Object.fromEntries(
+                    Object.entries(horarios).filter(([key]) => key !== "Curso")
+                );
+                linha += `<td><select>${Object.keys(horariosDisponiveis).flatMap(turno => horariosDisponiveis[turno].map(h => `<option value='${turno} - ${h}' ${h === horarioPadrao ? 'selected' : ''}>${turno} - ${h}</option>`)).join('')}</select></td>`;
+                linha += `</tr>`;
+                tabela.innerHTML += linha;
+            });
+        }
+
+        function gerarEscala() {
+            const hoje = new Date();
+            const diaSeguinte = new Date(hoje);
+            diaSeguinte.setDate(hoje.getDate() + 1); // Adiciona 1 dia
+
+            let escalaTexto = `Escala - ${diaSeguinte.toLocaleDateString('pt-BR')}\n\n`;
+
+            // Função para ordenar por função
+            const ordemFuncoes = ["🔴 Caixa", "🟢 Pacote", "🟡 Organização", "🔵 Venda"];
+
+            // Captura os valores atuais dos selects e inputs
+            const linhas = Array.from(document.querySelectorAll('#tabela-escala tr'));
+
+            // Abertura
+            const abertura = linhas
+                .filter(tr => {
+                    const horario = tr.querySelector('td:nth-child(3) select').value;
+                    console.log(`Horário do colaborador: ${horario}`); // Log para depuração
+                    return (
+                        (horario.includes("10h às 18h") || horario.includes("12h às 20h")) && 
+                        !horario.includes("Folga")
+                    );
+                })
+                .sort((a, b) => {
+                    const funcaoA = a.querySelector('td:nth-child(2) select').value;
+                    const funcaoB = b.querySelector('td:nth-child(2) select').value;
+                    return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
+                })
+                .map(tr => {
+                    const nome = tr.querySelector('td:nth-child(1) input').value; // Captura o valor do input
+                    const funcao = tr.querySelector('td:nth-child(2) select').value;
+                    const horario = tr.querySelector('td:nth-child(3) select').value;
+                    return `${funcao} - ${nome} - ${horario.split(" - ")[1]}`;
+                }).join('\n');
+
+            if (abertura) {
+                escalaTexto += "Abertura\n";
+                escalaTexto += abertura + '\n';
+            }
+
+            // Intermediário
+            const intermediario = linhas
+                .filter(tr => {
+                    const horario = tr.querySelector('td:nth-child(3) select').value;
+                    return horario.includes("12h às 18h") && !horario.includes("Folga");
+                })
+                .sort((a, b) => {
+                    const funcaoA = a.querySelector('td:nth-child(2) select').value;
+                    const funcaoB = b.querySelector('td:nth-child(2) select').value;
+                    return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
+                })
+                .map(tr => {
+                    const nome = tr.querySelector('td:nth-child(1) input').value; // Captura o valor do input
+                    const funcao = tr.querySelector('td:nth-child(2) select').value;
+                    return `${funcao} - ${nome} - 12h às 18h`;
+                }).join('\n');
+
+            if (intermediario) {
+                escalaTexto += "\nIntermediário\n";
+                escalaTexto += intermediario + '\n';
+            }
+
+            // Fechamento
+            const fechamento = linhas
+                .filter(tr => {
+                    const horario = tr.querySelector('td:nth-child(3) select').value;
+                    return horario.includes("14h às 22h") && !horario.includes("Folga");
+                })
+                .sort((a, b) => {
+                    const funcaoA = a.querySelector('td:nth-child(2) select').value;
+                    const funcaoB = b.querySelector('td:nth-child(2) select').value;
+                    return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
+                })
+                .map(tr => {
+                    const nome = tr.querySelector('td:nth-child(1) input').value; // Captura o valor do input
+                    const funcao = tr.querySelector('td:nth-child(2) select').value;
+                    return `${funcao} - ${nome} - 14h às 22h`;
+                }).join('\n');
+
+            if (fechamento) {
+                escalaTexto += "\nFechamento\n";
+                escalaTexto += fechamento + '\n';
+            }
+
+            // Folgas
+            const folgas = linhas
+                .filter(tr => {
+                    const horario = tr.querySelector('td:nth-child(3) select').value;
+                    return horario.includes("Folga");
+                })
+                .map(tr => tr.querySelector('td:nth-child(1) input').value); // Captura o valor do input
+            if (folgas.length > 0) {
+                escalaTexto += `\nFolgas:\n${folgas.join(", ")}`;
+            }
+
+            document.getElementById('resultado').innerText = escalaTexto;
+        }
+
+        function copiarEscala() {
+            const escalaTexto = document.getElementById('resultado').innerText;
+            
+            // Try the modern clipboard API with fallback
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(escalaTexto).then(() => {
+                    showSuccessMessage();
+                }).catch(err => {
+                    console.error('Erro ao copiar:', err);
+                    fallbackCopyTextToClipboard(escalaTexto);
+                });
+            } else {
+                fallbackCopyTextToClipboard(escalaTexto);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showSuccessMessage();
+                } else {
+                    alert("Não foi possível copiar o texto. Por favor, copie manualmente.");
+                }
+            } catch (err) {
+                console.error('Erro ao copiar:', err);
+                alert("Não foi possível copiar o texto. Por favor, copie manualmente.");
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showSuccessMessage() {
+            document.getElementById('resultado').style.backgroundColor = 'green';
+            document.getElementById('copy-message').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('resultado').style.backgroundColor = '#f5f5f5';
+                document.getElementById('copy-message').style.display = 'none';
+            }, 3000);
+        }
+
+        gerarTabela();
+    </script>
+</body>
+</html>

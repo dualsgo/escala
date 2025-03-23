@@ -97,6 +97,12 @@
       @media (max-width: 768px) {
         .container {
           padding: 10px;
+
+
+
+
+
+
         }
         .table-fixed {
           width: 100%;
@@ -107,13 +113,19 @@
           margin-top: 20px;
           overflow-x: auto;
           width: 100%;
+
+
+
         }
         .top-buttons {
           flex-direction: column;
           align-items: stretch;
+
         }
         .button-container {
           flex-direction: column;
+
+
         }
         .btn {
           padding: 12px;
@@ -122,6 +134,10 @@
         th, td {
           padding: 8px;
           font-size: 0.9rem;
+
+
+
+
         }
       }
 
@@ -131,6 +147,13 @@
         }
         .container {
           padding: 8px;
+
+
+
+
+
+
+
         }
         th, td {
           padding: 6px;
@@ -140,12 +163,19 @@
         .btn {
           width: 100%;
           margin-bottom: 8px;
+
         }
         #resultado {
           font-size: 0.9rem;
         }
         .add-remove-buttons {
           justify-content: center;
+
+
+
+
+
+
         }
       }
     </style>
@@ -201,26 +231,7 @@
       <div id="feedback-inconsistencia"></div>
     </div>
 
-    <script type="module">
-      // Importações do Firebase
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-      import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
-
-      // Configuração do Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyCaRY19CivIsct6SbMkrYg-iwgbdbs1_7M",
-        authDomain: "escalalj187.firebaseapp.com",
-        projectId: "escalalj187",
-        storageBucket: "escalalj187.firebasestorage.app",
-        messagingSenderId: "935912502982",
-        appId: "1:935912502982:web:666d19907d6db0d28c09c7",
-        measurementId: "G-XQ1LQRTB9D"
-      };
-
-      // Inicializar Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
+    <script>
       const colaboradores = [
         "Lidiane",
         "Aline",
@@ -289,7 +300,9 @@
         const diasMes = document.getElementById("dias-mes");
         const diasSemana = document.getElementById("dias-semana");
         const corpoTabela = document.getElementById("corpo-tabela");
-        const colaboradoresTbody = document.getElementById("colaboradores-tbody");
+        const colaboradoresTbody = document.getElementById(
+          "colaboradores-tbody"
+        );
         const tituloMes = document.getElementById("titulo-mes");
 
         const hoje = new Date();
@@ -358,6 +371,7 @@
         colaboradoresTbody.innerHTML = colaboradoresHtml;
         corpoTabela.innerHTML = corpoTabelaHtml;
 
+
         // Carregar estado salvo
         carregarEscala();
 
@@ -369,7 +383,9 @@
       }
 
       function adicionarLinha() {
-        const colaboradoresTbody = document.getElementById("colaboradores-tbody");
+        const colaboradoresTbody = document.getElementById(
+          "colaboradores-tbody"
+        );
         const corpoTabela = document.getElementById("corpo-tabela");
 
         const novaLinhaColaboradores = `<tr>
@@ -382,7 +398,10 @@
               .map((h) => `<option value="${h}">${h}</option>`)
               .join("")}</select></td>
         </tr>`;
-        colaboradoresTbody.insertAdjacentHTML("beforeend", novaLinhaColaboradores);
+        colaboradoresTbody.insertAdjacentHTML(
+          "beforeend",
+          novaLinhaColaboradores
+        );
 
         const novaLinhaTabela = `<tr>${Array.from({ length: document.getElementById("dias-mes").children.length })
           .map(() => `<td><select>${status.map((s) => `<option value="${s}">${s}</option>`).join("")}</select></td>`)
@@ -395,7 +414,9 @@
       }
 
       function removerLinha() {
-        const colaboradoresTbody = document.getElementById("colaboradores-tbody");
+        const colaboradoresTbody = document.getElementById(
+          "colaboradores-tbody"
+        );
         const corpoTabela = document.getElementById("corpo-tabela");
 
         if (colaboradoresTbody.children.length > 0) {
@@ -408,9 +429,11 @@
         verificarInconsistencias();
       }
 
-      async function salvarEscala() {
+      function salvarEscala() {
         const estado = [];
-        const linhasColaboradores = document.querySelectorAll("#colaboradores-tbody tr");
+        const linhasColaboradores = document.querySelectorAll(
+          "#colaboradores-tbody tr"
+        );
         const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
 
         linhasColaboradores.forEach((tr, index) => {
@@ -418,58 +441,55 @@
           const funcao = tr.querySelector("td:nth-child(2) select").value;
           const horario = tr.querySelector("td:nth-child(3) select").value;
           const statusDias = [];
-          linhasTabela[index].querySelectorAll("td select").forEach((select) => {
-            statusDias.push(select.value);
-          });
+          linhasTabela[index]
+            .querySelectorAll("td select")
+            .forEach((select) => {
+              statusDias.push(select.value);
+            });
           estado.push({ nome, funcao, horario, statusDias });
         });
+        localStorage.setItem("escalaSalva", JSON.stringify(estado));
 
-        try {
-          // Salvar no Firestore
-          await setDoc(doc(db, "escalas", "escalaAtual"), { estado });
-          console.log("Escala salva no Firestore!");
+        // Feedback visual: muda o texto do botão temporariamente
+        const btnSalvar = document.getElementById("btn-salvar");
+        btnSalvar.innerText = "Salvo";
+        setTimeout(() => {
+          btnSalvar.innerText = "Salvar Escala";
+        }, 3000);
 
-          // Feedback visual
-          const btnSalvar = document.getElementById("btn-salvar");
-          btnSalvar.innerText = "Salvo";
-          setTimeout(() => {
-            btnSalvar.innerText = "Salvar Escala";
-          }, 3000);
-        } catch (error) {
-          console.error("Erro ao salvar no Firestore:", error);
-        }
+        // Verificar inconsistências após salvar
+        verificarInconsistencias();
       }
 
-      async function carregarEscala() {
-        try {
-          // Carregar do Firestore
-          const docRef = doc(db, "escalas", "escalaAtual");
-          const docSnap = await getDoc(docRef);
+      function carregarEscala() {
+        const estadoSalvo = localStorage.getItem("escalaSalva");
+        if (estadoSalvo) {
+          const estado = JSON.parse(estadoSalvo);
+          const linhasColaboradores = document.querySelectorAll(
+            "#colaboradores-tbody tr"
+          );
+          const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
 
-          if (docSnap.exists()) {
-            const estado = docSnap.data().estado;
-            const linhasColaboradores = document.querySelectorAll("#colaboradores-tbody tr");
-            const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
-
-            estado.forEach((colaborador, index) => {
-              if (linhasColaboradores[index]) {
-                linhasColaboradores[index].querySelector("td:nth-child(1)").innerText = colaborador.nome;
-                linhasColaboradores[index].querySelector("td:nth-child(2) select").value = colaborador.funcao;
-                linhasColaboradores[index].querySelector("td:nth-child(3) select").value = colaborador.horario;
-              }
-              if (linhasTabela[index]) {
-                colaborador.statusDias.forEach((statusDia, i) => {
-                  linhasTabela[index].querySelector(`td:nth-child(${i + 1}) select`).value = statusDia;
-                });
-              }
-            });
-
-            console.log("Escala carregada do Firestore!");
-          } else {
-            console.log("Nenhuma escala encontrada no Firestore.");
-          }
-        } catch (error) {
-          console.error("Erro ao carregar do Firestore:", error);
+          estado.forEach((colaborador, index) => {
+            if (linhasColaboradores[index]) {
+              linhasColaboradores[index].querySelector(
+                "td:nth-child(1)"
+              ).innerText = colaborador.nome;
+              linhasColaboradores[index].querySelector(
+                "td:nth-child(2) select"
+              ).value = colaborador.funcao;
+              linhasColaboradores[index].querySelector(
+                "td:nth-child(3) select"
+              ).value = colaborador.horario;
+            }
+            if (linhasTabela[index]) {
+              colaborador.statusDias.forEach((statusDia, i) => {
+                linhasTabela[index].querySelector(
+                  `td:nth-child(${i + 1}) select`
+                ).value = statusDia;
+              });
+            }
+          });
         }
 
         // Atualizar cores da tabela e verificar inconsistências
@@ -494,7 +514,9 @@
 
       function verificarInconsistencias() {
         const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
-        const feedbackInconsistencia = document.getElementById("feedback-inconsistencia");
+        const feedbackInconsistencia = document.getElementById(
+          "feedback-inconsistencia"
+        );
         let inconsistencias = [];
 
         linhasTabela.forEach((tr, index) => {
@@ -566,7 +588,9 @@
             "pt-BR"
           )}\n\n`;
 
-          const linhasColaboradores = document.querySelectorAll("#colaboradores-tbody tr");
+          const linhasColaboradores = document.querySelectorAll(
+            "#colaboradores-tbody tr"
+          );
           const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
 
           // Captura os valores atuais dos selects e inputs
@@ -675,33 +699,6 @@
       document
         .getElementById("corpo-tabela")
         .addEventListener("change", atualizarTabela);
-
-      // Ouvir mudanças na escala
-      const escalaRef = doc(db, "escalas", "escalaAtual");
-      onSnapshot(escalaRef, (doc) => {
-        if (doc.exists()) {
-          const estado = doc.data().estado;
-          const linhasColaboradores = document.querySelectorAll("#colaboradores-tbody tr");
-          const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
-
-          estado.forEach((colaborador, index) => {
-            if (linhasColaboradores[index]) {
-              linhasColaboradores[index].querySelector("td:nth-child(1)").innerText = colaborador.nome;
-              linhasColaboradores[index].querySelector("td:nth-child(2) select").value = colaborador.funcao;
-              linhasColaboradores[index].querySelector("td:nth-child(3) select").value = colaborador.horario;
-            }
-            if (linhasTabela[index]) {
-              colaborador.statusDias.forEach((statusDia, i) => {
-                linhasTabela[index].querySelector(`td:nth-child(${i + 1}) select`).value = statusDia;
-              });
-            }
-          });
-
-          console.log("Escala atualizada em tempo real!");
-          atualizarCoresTabela();
-          verificarInconsistencias();
-        }
-      });
 
       gerarTabelaMensal();
     </script>

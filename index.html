@@ -155,127 +155,318 @@
     </div>
 
     <script>
-function gerarEscala() {
-    const hoje = new Date();
-    const diaSeguinte = new Date(hoje);
-    diaSeguinte.setDate(hoje.getDate() + 1);
-    const diaSemana = diaSeguinte.getDay();
-    const isDomingo = diaSemana === 0;
+      const colaboradores = [
+        "Lidiane",
+        "Aline",
+        "Jheferson",
+        "Luiza",
+        "Luiz",
+        "Renata",
+        "Júlia",
+        "Cátia",
+        "Erika",
+        "Caren",
+        "Raissa",
+        "Nathan",
+        "João",
+        "Ronaldo",
+      ];
 
-    const dataFormatada = diaSeguinte.toLocaleDateString("pt-BR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-    });
+      const funcoes = {
+        "🔴 Caixa": "🔴 Caixa",
+        "🟢 Pacote": "🟢 Pacote",
+        "🟡 Organização": "🟡 Organização",
+        "🔵 Venda": "🔵 Venda",
+      };
 
-    let escalaTexto = `📅 Escala - ${dataFormatada}\n\n`;
-    const ordemFuncoes = ["🔴 Caixa", "🟢 Pacote", "🟡 Organização", "🔵 Venda"];
-    const linhas = Array.from(document.querySelectorAll("#tabela-escala tr"));
+      const horarios = {
+        Abertura: [
+          "10h às 18h", // Padrão dias úteis
+          "12h às 20h", // Padrão domingos
+          "10h às 19h", // Extensão 1
+          "10h às 20h", // Extensão 2
+          "12h às 18h", // Turno reduzido
+        ],
+        Intermediário: [
+          "12h às 18h", // Turno padrão
+          "12h às 20h", // Turno estendido
+          "13h às 19h", // Turno deslocado
+          "14h às 20h", // Turno tarde
+        ],
+        Fechamento: [
+          "14h às 22h", // Padrão
+          "13h às 22h", // Início antecipado
+          "15h às 22h", // Início tardio
+          "13h às 21h", // Turno especial
+        ],
+        Folga: ["Folga"],
+        Curso: ["Curso"],
+      };
 
-    // Abertura
-    const abertura = linhas
-        .filter((tr) => {
+      const valoresPadrao = {
+        Lidiane: { funcao: "🔴 Caixa", horario: "10h às 18h" },
+        Aline: { funcao: "🟢 Pacote", horario: "10h às 18h" },
+        Jheferson: { funcao: "🟡 Organização", horario: "10h às 18h" },
+        Luiza: { funcao: "🟡 Organização", horario: "10h às 18h" },
+        Luiz: { funcao: "🔵 Venda", horario: "10h às 18h" },
+        Renata: { funcao: "🔵 Venda", horario: "10h às 18h" },
+        Júlia: { funcao: "🟡 Organização", horario: "12h às 18h" },
+        Cátia: { funcao: "🔴 Caixa", horario: "14h às 22h" },
+        Erika: { funcao: "🟢 Pacote", horario: "14h às 22h" },
+        Caren: { funcao: "🟡 Organização", horario: "14h às 22h" },
+        Raissa: { funcao: "🟡 Organização", horario: "14h às 22h" },
+        Nathan: { funcao: "🔵 Venda", horario: "14h às 22h" },
+        João: { funcao: "🔵 Venda", horario: "14h às 22h" },
+        Ronaldo: { funcao: "🔵 Venda", horario: "14h às 22h" },
+      };
+
+      function gerarTabela() {
+        const tabela = document.getElementById("tabela-escala");
+        const hoje = new Date();
+        const diaSeguinte = new Date(hoje);
+        diaSeguinte.setDate(hoje.getDate() + 1);
+
+        const diaSemana = diaSeguinte.getDay();
+        const isDomingo = diaSemana === 0;
+
+        document.getElementById(
+          "data-atual"
+        ).innerText = `📅 ${diaSeguinte.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        })}${isDomingo ? " (Domingo)" : diaSemana === 6 ? " (Sábado)" : ""}`;
+
+        tabela.innerHTML = "";
+        colaboradores.forEach((nome) => {
+          const padrao = valoresPadrao[nome] || {
+            funcao: "🔴 Caixa",
+            horario: "10h às 18h",
+          };
+
+          // Apenas Júlia pode ter a opção "Curso"
+          const horariosDisponiveis =
+            nome === "Júlia"
+              ? horarios
+              : Object.fromEntries(
+                  Object.entries(horarios).filter(([key]) => key !== "Curso")
+                );
+
+          const linha = `
+                    <tr>
+                        <td><input type="text" value="${nome}" class="editable"></td>
+                        <td>
+                            <select>
+                                ${Object.values(funcoes)
+                                  .map(
+                                    (f) =>
+                                      `<option value="${f}" ${
+                                        f === padrao.funcao ? "selected" : ""
+                                      }>${f}</option>`
+                                  )
+                                  .join("")}
+                            </select>
+                        </td>
+                        <td>
+                            <select>
+                                ${Object.entries(horariosDisponiveis)
+                                  .flatMap(([turno, horariosTurno]) =>
+                                    horariosTurno.map(
+                                      (h) =>
+                                        `<option value="${turno} - ${h}" ${
+                                          h === padrao.horario ? "selected" : ""
+                                        }>
+                                            ${turno} - ${h}
+                                        </option>`
+                                    )
+                                  )
+                                  .join("")}
+                            </select>
+                        </td>
+                    </tr>
+                `;
+          tabela.innerHTML += linha;
+        });
+      }
+
+      function gerarEscala() {
+        const hoje = new Date();
+        const diaSeguinte = new Date(hoje);
+        diaSeguinte.setDate(hoje.getDate() + 1);
+        const diaSemana = diaSeguinte.getDay();
+        const isDomingo = diaSemana === 0;
+
+        const dataFormatada = diaSeguinte.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        });
+
+        let escalaTexto = `📅 Escala - ${dataFormatada}\n\n`;
+        const ordemFuncoes = [
+          "🔴 Caixa",
+          "🟢 Pacote",
+          "🟡 Organização",
+          "🔵 Venda",
+        ];
+        const linhas = Array.from(
+          document.querySelectorAll("#tabela-escala tr")
+        );
+
+        // Abertura
+        const horarioAbertura = isDomingo ? "12h às 20h" : "10h às 18h";
+        const abertura = linhas
+          .filter((tr) => {
             const horario = tr.querySelector("td:nth-child(3) select").value;
             return (
-                horario.includes("10h às 18h") ||
-                horario.includes("10h às 19h") ||
-                horario.includes("10h às 20h") ||
-                horario.includes("12h às 20h")
-            ) && !horario.includes("Folga");
-        })
-        .sort((a, b) => {
+              horario.includes("Abertura") && !horario.includes("Folga")
+            );
+          })
+          .sort((a, b) => {
             const funcaoA = a.querySelector("td:nth-child(2) select").value;
             const funcaoB = b.querySelector("td:nth-child(2) select").value;
-            return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
-        })
-        .map((tr) => {
-            const nome = tr.querySelector("td:nth-child(1) input").value;
-            const funcao = tr.querySelector("td:nth-child(2) select").value;
-            const horarioParts = tr.querySelector("td:nth-child(3) select").value.split(" - ");
-            const horarioFinal = horarioParts.length > 1 ? horarioParts[1] : horarioParts[0];
-            return `${funcao} - ${nome} - ${horarioFinal}`;
-        })
-        .join("\n");
-
-    if (abertura) {
-        escalaTexto += `⏰ Abertura\n`;
-        escalaTexto += abertura + "\n";
-    }
-
-    // Intermediário
-    const intermediario = linhas
-        .filter((tr) => {
-            const horario = tr.querySelector("td:nth-child(3) select").value;
             return (
-                horario.includes("12h às 18h") ||
-                horario.includes("12h às 20h") ||
-                horario.includes("13h às 19h") ||
-                horario.includes("14h às 20h")
-            ) && !horario.includes("Folga");
-        })
-        .sort((a, b) => {
-            const funcaoA = a.querySelector("td:nth-child(2) select").value;
-            const funcaoB = b.querySelector("td:nth-child(2) select").value;
-            return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
-        })
-        .map((tr) => {
+              ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB)
+            );
+          })
+          .map((tr) => {
             const nome = tr.querySelector("td:nth-child(1) input").value;
             const funcao = tr.querySelector("td:nth-child(2) select").value;
-            const horarioParts = tr.querySelector("td:nth-child(3) select").value.split(" - ");
-            const horarioFinal = horarioParts.length > 1 ? horarioParts[1] : horarioParts[0];
+            const horarioParts = tr
+              .querySelector("td:nth-child(3) select")
+              .value.split(" - ");
+            const horarioFinal =
+              horarioParts.length > 1 ? horarioParts[1] : horarioParts[0];
             return `${funcao} - ${nome} - ${horarioFinal}`;
-        })
-        .join("\n");
+          })
+          .join("\n");
 
-    if (intermediario) {
-        escalaTexto += "\nIntermediário\n";
-        escalaTexto += intermediario + "\n";
-    }
+        if (abertura) {
+          escalaTexto += `⏰ Abertura (${horarioAbertura})\n`;
+          escalaTexto += abertura + "\n";
+        }
 
-    // Fechamento
-    const fechamento = linhas
-        .filter((tr) => {
+        // Intermediário
+        const intermediario = linhas
+          .filter((tr) => {
             const horario = tr.querySelector("td:nth-child(3) select").value;
-            return (
-                horario.includes("14h às 22h") ||
-                horario.includes("13h às 22h") ||
-                horario.includes("15h às 22h") ||
-                horario.includes("13h às 21h")
-            ) && !horario.includes("Folga");
-        })
-        .sort((a, b) => {
+            return horario.includes("Intermediário") && !horario.includes("Folga");
+          })
+          .sort((a, b) => {
             const funcaoA = a.querySelector("td:nth-child(2) select").value;
             const funcaoB = b.querySelector("td:nth-child(2) select").value;
-            return ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB);
-        })
-        .map((tr) => {
+            return (
+              ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB)
+            );
+          })
+          .map((tr) => {
             const nome = tr.querySelector("td:nth-child(1) input").value;
             const funcao = tr.querySelector("td:nth-child(2) select").value;
-            const horarioParts = tr.querySelector("td:nth-child(3) select").value.split(" - ");
-            const horarioFinal = horarioParts.length > 1 ? horarioParts[1] : horarioParts[0];
-            return `${funcao} - ${nome} - ${horarioFinal}`;
-        })
-        .join("\n");
+            return `${funcao} - ${nome} - 12h às 18h`;
+          })
+          .join("\n");
 
-    if (fechamento) {
-        escalaTexto += "\nFechamento\n";
-        escalaTexto += fechamento + "\n";
-    }
+        if (intermediario) {
+          escalaTexto += "\nIntermediário\n";
+          escalaTexto += intermediario + "\n";
+        }
 
-    // Folgas
-    const folgas = linhas
-        .filter((tr) => {
+        // Fechamento
+        const fechamento = linhas
+          .filter((tr) => {
+            const horario = tr.querySelector("td:nth-child(3) select").value;
+            return horario.includes("Fechamento") && !horario.includes("Folga");
+          })
+          .sort((a, b) => {
+            const funcaoA = a.querySelector("td:nth-child(2) select").value;
+            const funcaoB = b.querySelector("td:nth-child(2) select").value;
+            return (
+              ordemFuncoes.indexOf(funcaoA) - ordemFuncoes.indexOf(funcaoB)
+            );
+          })
+          .map((tr) => {
+            const nome = tr.querySelector("td:nth-child(1) input").value; // Captura o valor do input
+            const funcao = tr.querySelector("td:nth-child(2) select").value;
+            return `${funcao} - ${nome} - 14h às 22h`;
+          })
+          .join("\n");
+
+        if (fechamento) {
+          escalaTexto += "\nFechamento\n";
+          escalaTexto += fechamento + "\n";
+        }
+
+        // Folgas
+        const folgas = linhas
+          .filter((tr) => {
             const horario = tr.querySelector("td:nth-child(3) select").value;
             return horario.includes("Folga");
-        })
-        .map((tr) => tr.querySelector("td:nth-child(1) input").value);
+          })
+          .map((tr) => tr.querySelector("td:nth-child(1) input").value); // Captura o valor do input
+        if (folgas.length > 0) {
+          escalaTexto += `\nFolgas:\n${folgas.join(", ")}`;
+        }
 
-    if (folgas.length > 0) {
-        escalaTexto += `\nFolgas:\n${folgas.join(", ")}`;
-    }
+        document.getElementById("resultado").innerText = escalaTexto;
+      }
 
-    document.getElementById("resultado").innerText = escalaTexto;
-}
-</script>
+      function copiarEscala() {
+        const escalaTexto = document.getElementById("resultado").innerText;
+
+        // Try the modern clipboard API with fallback
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard
+            .writeText(escalaTexto)
+            .then(() => {
+              showSuccessMessage();
+            })
+            .catch((err) => {
+              console.error("Erro ao copiar:", err);
+              fallbackCopyTextToClipboard(escalaTexto);
+            });
+        } else {
+          fallbackCopyTextToClipboard(escalaTexto);
+        }
+      }
+
+      function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+          const successful = document.execCommand("copy");
+          if (successful) {
+            showSuccessMessage();
+          } else {
+            alert(
+              "Não foi possível copiar o texto. Por favor, copie manualmente."
+            );
+          }
+        } catch (err) {
+          console.error("Erro ao copiar:", err);
+          alert(
+            "Não foi possível copiar o texto. Por favor, copie manualmente."
+          );
+        }
+
+        document.body.removeChild(textArea);
+      }
+
+      function showSuccessMessage() {
+        document.getElementById("resultado").style.backgroundColor = "green";
+        document.getElementById("copy-message").style.display = "block";
+        setTimeout(() => {
+          document.getElementById("resultado").style.backgroundColor =
+            "#f5f5f5";
+          document.getElementById("copy-message").style.display = "none";
+        }, 3000);
+      }
+
+      gerarTabela();
+    </script>
   </body>
 </html>
